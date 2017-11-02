@@ -16,42 +16,19 @@ library(rintrojs)
 ##AllRecreationalLandings.csv: landings-based 1986-2015 tab
 ## From GOM Red Snapper Recreational Allocation 20171031.xlsx
 allRec <- read_csv("AllRecreationalLandings.csv")
-
-## Split into separate series to remove 2010 (i.e., oil spill year)   
-recLandingsPre2010 <- allRec %>% filter(YEAR <= 2009 & YEAR >=1986 )  #subset years
-recLandingsPost2010 <- allRec %>% filter(YEAR <= 2015 & YEAR >=2011 )  #subset years
+allRec[30,2:6] <- NA ##remove 2010 (i.e., oil spill year) 
+allRec$star <- c(rep(NA, 29), 1500000,rep(NA,6)) 
 
 recLandingsPlot <- highchart() %>% 
-  
-  hc_xAxis(categories =1986:2016) %>% 
-  hc_add_series(name = "Florida", data = recLandingsPre2010$FLW, type="line") %>%
-  hc_add_series(name = "Florida", data = recLandingsPost2010$FLW, type="line")
-  
-  hc_add_series(name = "Alabama", data = recLandingsPre2010$AL, type="line") %>%
-  hc_add_series(name = "Mississippi", data = recLandingsPre2010$MS, type="line") %>%
-  hc_add_series(name = "Louisiana", data = recLandingsPre2010$LA, type="line") %>%
-  hc_add_series(name = "Texas", data = recLandingsPre2010$TX, type="line") %>%
-  
-  hc_add_series(name = "Florida", data = recLandingsPost2010$FLW, type="line") %>%
-  hc_add_series(name = "Alabama", data = recLandingsPost2010$AL, type="line") %>%
-  hc_add_series(name = "Mississippi", data = recLandingsPost2010$MS, type="line") %>%
-  hc_add_series(name = "Louisiana", data = recLandingsPost2010$LA, type="line") %>%
-  hc_add_series(name = "Texas", data = recLandingsPost2010$TX, type="line") #%>%
-  
-  
-  hc_add_series(name = "Minimum size limit", data = df$SizeLimit, type="line") %>% 
-  hc_yAxis(title = list(text = "Size and bag limits"),
-           labels = list(style = list(color = "#000000", fontWeight="bold"))) %>% 
-  hc_add_theme(hc_theme_economist()) %>% 
-  hc_tooltip (enabled=FALSE) %>% 
-  
-  hc_plotOptions(line=list(marker=list(enabled=FALSE))) %>% 
-  hc_exporting(enabled = TRUE, url="https://export.highcharts.com",
-               filename = "Landings") %>% 
-  hc_title(text = "Recreational red snapper management")
-#seasonLength
-
-
+  hc_xAxis(categories =allRec$YEAR) %>% 
+  hc_add_series(name = "Florida", data = allRec$FLW, type="line") %>%
+  hc_add_series(name = "Alabama", data = allRec$AL, type="line") %>%
+  hc_add_series(name = "Mississippi", data = allRec$MS, type="line") %>%
+  hc_add_series(name = "Louisiana", data = allRec$LA, type="line") %>%
+  hc_add_series(name = "Texas", data = allRec$TX, type="line") %>%
+  hc_add_series(name = "Oil spill: data omitted in 2010", type = 'scatter',data=allRec$star,
+                marker=list(symbol="cross"),color='black') %>% 
+  hc_add_theme(hc_theme_smpl()) 
 
 
 
