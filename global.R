@@ -1,5 +1,7 @@
 ##global.R
 options(digits=7)
+
+## load libraries for app
 library(shiny)
 library(tidyverse)
 library(shinydashboard)
@@ -12,15 +14,51 @@ library(leaflet.extras)
 library(shinyBS)
 library(rgdal)
 library(rintrojs)
+library(formattable)
 
+##load mapped data ###see rasterize.R for details
+load("mappedData.RData")
+##  Data from : Mandy Karnauskas, John F. Walter III, Matthew D. Campbell, Adam G.
+# Pollack, J. Marcus Drymon & Sean Powers (2017) Red Snapper Distribution on Natural Habitats
+# and Artificial Structures in the Northern Gulf of Mexico, Marine and Coastal Fisheries, 9:1, 50-67,
+# DOI: 10.1080/19425120.2016.1255684
+##highchart bar chart data:
+Biomass <- data.frame(State=c("TX", "LA", "MS", "AL", "FL"),
+                      Biomass=c(.4213, .2028, .0134, .0630, .2994),
+                      col=c("#8c510a", "#c7eae5", 
+                          "#d8b365", "#5ab4ac",
+                          "#01665e"))
+
+
+
+biomassChart <- hchart(Biomass, "column", hcaes(State, Biomass, color=col))
+  
+  
+
+
+## 
 ##AllRecreationalLandings.csv: landings-based 1986-2015 tab
 ## From GOM Red Snapper Recreational Allocation 20171031.xlsx
 allRec <- read_csv("AllRecreationalLandings.csv")
 allRec[30,2:6] <- NA ##remove 2010 (i.e., oil spill year) 
-allRec$star <- c(rep(NA, 29), 1500000,rep(NA,6)) 
+allRec$star <- c(rep(NA, 29), 1750000,rep(NA,6)) 
 
+
+
+
+
+
+
+
+## This base plot can be pre-rendered in saved in RData to be
+## loaded on page load modified by user interaction.
 recLandingsPlot <- highchart() %>% 
   hc_xAxis(categories =allRec$YEAR) %>% 
+  # hc_xAxis(categories =allRec$YEAR,
+  #          plotBands=list(
+  #            list(color= "rgba(100, 0, 0, 0.1)",
+  #                 from=allRec$YEAR[29],
+  #                 to=allRec$YEAR[30]))) %>% 
   hc_add_series(name = "Florida", data = allRec$FLW, type="line") %>%
   hc_add_series(name = "Alabama", data = allRec$AL, type="line") %>%
   hc_add_series(name = "Mississippi", data = allRec$MS, type="line") %>%
@@ -28,49 +66,16 @@ recLandingsPlot <- highchart() %>%
   hc_add_series(name = "Texas", data = allRec$TX, type="line") %>%
   hc_add_series(name = "Oil spill: data omitted in 2010", type = 'scatter',data=allRec$star,
                 marker=list(symbol="cross"),color='black') %>% 
-  hc_add_theme(hc_theme_smpl()) 
+  hc_add_theme(hc_theme_smpl()) %>% 
+  hc_yAxis(title = list(text = "Landings (lbs ww)"),
+           labels = list(style = list(color = "#000000", fontWeight="bold"))) %>% 
+  hc_exporting(enabled = TRUE, url="https://export.highcharts.com",
+               filename = "Recreational Landings") %>% 
+  hc_title(text = "Recreational red snapper landings")
+
+
+##import mapped data
 
 
 
-# ## Will go in a reactive 
-# allFLW <- allRec %>% 
-#                   filter(YEAR <= 2015 & YEAR >=1986 & YEAR !=2010) %>% #subset years
-#                   select(YEAR, FLW) %>% #select variables 
-#                   arrange(desc(FLW)) %>% 
-#                   slice(1:10) %>% ##top in will be here
-#                   arrange(YEAR) %>% 
-#                   summarise(sum=sum(FLW))    
-# allAL <- allRec %>% 
-#   filter(YEAR <= 2015 & YEAR >=1986 & YEAR !=2010) %>% #subset years
-#   select(YEAR, AL) %>% #select variables 
-#   arrange(desc(AL)) %>% 
-#   slice(1:10) %>% ##top in will be here
-#   summarise(sum=sum(AL))  
-# 
-# allMS <- allRec %>% 
-#   filter(YEAR <= 2015 & YEAR >=1986 & YEAR !=2010) %>% #subset years
-#   select(YEAR, MS) %>% #select variables 
-#   arrange(desc(MS)) %>% 
-#   slice(1:10) %>% ##top in will be here
-#   summarise(sum=sum(MS)) 
-# 
-# allLA <- allRec %>% 
-#   filter(YEAR <= 2015 & YEAR >=1986 & YEAR !=2010) %>% #subset years
-#   select(YEAR, LA) %>% #select variables 
-#   arrange(desc(LA)) %>% 
-#   slice(1:10) %>% ##top in will be here
-#   summarise(sum=sum(LA)) 
-
-
-
-# ## or define a function
-# topX <- function(data, yearMin=1986,
-#                  yearMax=2015, N=10){
-#   tmp <- data %>%
-#   filter(YEAR <= yearMax & YEAR >=yearMin ) %>% #subset years
-#    select_(YEAR, state) #%>% #select variables
-#   head(tmp)
-# }
-# # 
-# # topX(data=allRec)
-#             
+           
